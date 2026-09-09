@@ -1,0 +1,94 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  
+  --color-ms-bg: #F6F8FC;
+  --color-ms-card: #FFFFFF;
+  --color-ms-navy: #102E57;
+  --color-ms-blue: #3B82F6;
+  --color-ms-softblue: #EAF2FF;
+  --color-ms-red: #F05D72;
+  --color-ms-amber: #D99B27;
+  --color-ms-green: #2AA77C;
+  --color-ms-text: #172033;
+  --color-ms-muted: #667085;
+  --color-ms-border: #E7EAF0;
+}
+
+:root {
+  --background: #F6F8FC;
+  --foreground: #172033;
+  --card: #FFFFFF;
+  --card-foreground: #172033;
+  --popover: #FFFFFF;
+  --popover-foreground: #172033;
+  --primary: #102E57;
+  --primary-foreground: #FFFFFF;
+  --secondary: #EAF2FF;
+  --secondary-foreground: #102E57;
+  --muted: #F1F4F9;
+  --muted-foreground: #667085;
+  --accent: #EAF2FF;
+  --accent-foreground: #3B82F6;
+  --destructive: #F05D72;
+  --destructive-foreground: #FFFFFF;
+  --border: #E7EAF0;
+  --input: #E7EAF0;
+  --ring: #3B82F6;
+  --radius: 0.75rem;
+
+  --chart-1: #3B82F6;
+  --chart-2: #2AA77C;
+  --chart-3: #D99B27;
+  --chart-4: #F05D72;
+  --chart-5: #102E57;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular figures for financial and risk values */
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Subtle institutional shadows */
+.shadow-subtle {
+  box-shadow: 0 1px 3px 0 rgba(16, 46, 87, 0.04), 0 1px 2px -1px rgba(16, 46, 87, 0.02);
+}
+
+.shadow-card {
+  box-shadow: 0 4px 12px -2px rgba(16, 46, 87, 0.05), 0 2px 6px -1px rgba(16, 46, 87, 0.02);
+}
+
+.shadow-elevated {
+  box-shadow: 0 10px 25px -5px rgba(16, 46, 87, 0.08), 0 8px 10px -6px rgba(16, 46, 87, 0.03);
+}
+
+/* Risk gauge circle */
+@keyframes dash-fill {
+  from { stroke-dashoffset: 251.33; }
+}
+.animate-dash {
+  animation: dash-fill 1s ease-out forwards;
+}
+
+/* Soft pulse for badges */
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+.animate-soft-pulse {
+  animation: soft-pulse 2s ease-in-out infinite;
+}

@@ -1,0 +1,220 @@
+// ---------------------------------------------------------------------------
+// MochaShield – Mock data representing realistic financial risk intelligence
+// ---------------------------------------------------------------------------
+
+import type {
+  Portfolio,
+  Holding,
+  ProposedOrder,
+  RiskAnalysisResult,
+} from "@/types/risk";
+
+export const INITIAL_HOLDINGS: Holding[] = [
+  {
+    id: "pos-1",
+    symbol: "AAPL",
+    name: "Apple Inc.",
+    side: "Long",
+    margin: 15_000,
+    leverage: 2,
+    exposure: 30_000,
+    dayChange: "+1.2%",
+    riskTags: ["Technology", "High beta"],
+  },
+  {
+    id: "pos-2",
+    symbol: "AMD",
+    name: "Advanced Micro Devices",
+    side: "Long",
+    margin: 12_500,
+    leverage: 2,
+    exposure: 25_000,
+    dayChange: "-1.4%",
+    riskTags: ["Semiconductors", "High beta"],
+  },
+  {
+    id: "pos-3",
+    symbol: "COIN",
+    name: "Coinbase Global",
+    side: "Long",
+    margin: 10_000,
+    leverage: 2,
+    exposure: 20_000,
+    dayChange: "+0.8%",
+    riskTags: ["Crypto-linked", "High beta"],
+  },
+];
+
+export const INITIAL_PORTFOLIO: Portfolio = {
+  equity: 100_000,
+  grossExposure: 75_000,
+  grossLeverage: 0.75,
+  riskScore: 52,
+  riskLabel: "Moderate",
+  openPositions: 3,
+  dataWindow: "90 days",
+  holdings: INITIAL_HOLDINGS,
+};
+
+export const AVAILABLE_SYMBOLS = [
+  { symbol: "NVDA", name: "NVIDIA Corp.", sector: "Semiconductors · High volatility · Beta 1.8" },
+  { symbol: "AAPL", name: "Apple Inc.", sector: "Technology · Megacap · Beta 1.1" },
+  { symbol: "AMD", name: "Advanced Micro Devices", sector: "Semiconductors · High volatility · Beta 1.7" },
+  { symbol: "COIN", name: "Coinbase Global", sector: "Crypto-linked · High volatility · Beta 2.4" },
+  { symbol: "TSLA", name: "Tesla Inc.", sector: "Consumer / EV · High volatility · Beta 2.1" },
+  { symbol: "META", name: "Meta Platforms", sector: "Digital Media · High beta · Beta 1.4" },
+  { symbol: "MSFT", name: "Microsoft Corp.", sector: "Enterprise Software · Beta 1.2" },
+  { symbol: "SPY", name: "SPDR S&P 500 ETF", sector: "Broad Market Index · Beta 1.0" },
+  { symbol: "BTC", name: "Bitcoin Perp", sector: "Digital Asset · High volatility · Beta 2.2" },
+  { symbol: "GLD", name: "SPDR Gold Shares", sector: "Commodity Hedge · Low correlation" },
+];
+
+export const DEFAULT_PROPOSED_ORDER: ProposedOrder = {
+  symbol: "NVDA",
+  side: "Long",
+  margin: 20_000,
+  leverage: 3,
+  exposure: 60_000,
+  note: "Review semiconductor overlap before execution",
+};
+
+export const DEFAULT_RISK_ANALYSIS: RiskAnalysisResult = {
+  currentScore: 52,
+  proposedScore: 79,
+  delta: 27,
+  orderLeverage: 3,
+  portfolioLeverageBefore: 0.75,
+  portfolioLeverageAfter: 1.35,
+  alertHeadline: "High portfolio impact: review position size and leverage before continuing.",
+  alertStatement: "This order materially increases correlated technology exposure.",
+  primaryDriver: "Concentration + correlation",
+  alertWarning: "High portfolio impact: review position size and leverage before continuing.",
+  components: [
+    {
+      component: "Concentration",
+      before: 46,
+      after: 81,
+      delta: 35,
+      description: "NVDA expands single-name semiconductor exposure to 44% of gross portfolio.",
+      tooltip: "Measures exposure clustering across individual assets and sector concentrations.",
+    },
+    {
+      component: "Correlation",
+      before: 55,
+      after: 81,
+      delta: 26,
+      description: "NVDA exhibits a 0.82 pairwise correlation with your existing AMD holding.",
+      tooltip: "Calculates the weighted co-movement probability based on a 90-day rolling lookback.",
+    },
+    {
+      component: "Leverage",
+      before: 48,
+      after: 76,
+      delta: 28,
+      description: "Portfolio gross leverage increases from 0.75× to 1.35× on ₹1,00,000 equity.",
+      tooltip: "Ratio of total gross notional derivatives exposure against liquid equity capital.",
+    },
+    {
+      component: "Scenario risk",
+      before: 59,
+      after: 77,
+      delta: 18,
+      description: "Drawdown severity in a targeted technology re-pricing increases by 89%.",
+      tooltip: "Estimated loss severity under historical and forward-looking stress scenarios.",
+    },
+  ],
+  correlation: {
+    assets: ["AAPL", "AMD", "COIN", "NVDA"],
+    matrix: [
+      [1.00, 0.68, 0.48, 0.74],
+      [0.68, 1.00, 0.56, 0.82],
+      [0.48, 0.56, 1.00, 0.58],
+      [0.74, 0.82, 0.58, 1.00],
+    ],
+    insight:
+      "NVDA has the strongest relationship with AMD in this portfolio (0.82). Adding NVDA increases semiconductor exposure rather than adding independent diversification.",
+  },
+  scenarios: [
+    {
+      id: "tech-selloff",
+      name: "Technology sell-off",
+      subtitle: "Illustrative shock",
+      description: "High-beta technology and semiconductor names reprice together.",
+      disclaimer: "Hypothetical stress scenario, not a forecast.",
+      beforeLossAmount: 8_100,
+      beforeLossPercent: 8.1,
+      afterLossAmount: 15_300,
+      afterLossPercent: 15.3,
+      changeAmount: 7_200,
+      mostAffected: "NVDA",
+    },
+    {
+      id: "market-riskoff",
+      name: "Broad market risk-off",
+      subtitle: "Macro liquidity contagion",
+      description: "Global equity indices and high-beta assets sell off concurrently with safe haven dollar flows.",
+      disclaimer: "Hypothetical stress scenario, not a forecast.",
+      beforeLossAmount: 6_800,
+      beforeLossPercent: 6.8,
+      afterLossAmount: 11_900,
+      afterLossPercent: 11.9,
+      changeAmount: 5_100,
+      mostAffected: "AMD / NVDA",
+    },
+    {
+      id: "liquidity-shock",
+      name: "Liquidity shock",
+      subtitle: "Sudden volatility spike",
+      description: "Sudden spread widening and margin volatility across leveraged crypto and speculative equity contracts.",
+      disclaimer: "Hypothetical stress scenario, not a forecast.",
+      beforeLossAmount: 4_500,
+      beforeLossPercent: 4.5,
+      afterLossAmount: 8_900,
+      afterLossPercent: 8.9,
+      changeAmount: 4_400,
+      mostAffected: "COIN",
+    },
+  ],
+  alternatives: [
+    {
+      id: "original",
+      title: "Original order",
+      margin: 20_000,
+      leverage: 3,
+      exposure: 60_000,
+      riskScore: 79,
+      delta: 27,
+    },
+    {
+      id: "smaller-position",
+      title: "Smaller position",
+      margin: 10_000,
+      leverage: 3,
+      exposure: 30_000,
+      riskScore: 65,
+      delta: 13,
+      buttonLabel: "Apply smaller position",
+    },
+    {
+      id: "lower-leverage",
+      title: "Lower leverage",
+      margin: 20_000,
+      leverage: 1,
+      exposure: 20_000,
+      riskScore: 61,
+      delta: 9,
+      buttonLabel: "Apply lower leverage",
+    },
+  ],
+  explanation: {
+    headline: "MochaShield AI Explanation",
+    narrative:
+      "Your largest vulnerability is combined high-beta technology exposure, not a single ticker. The proposed NVDA order adds ₹60,000 of leveraged exposure to a portfolio already holding AAPL, AMD and COIN. The strongest overlap is with AMD. In the hypothetical technology sell-off scenario, the new order increases the estimated portfolio loss. A smaller position or lower leverage produces a lower portfolio-risk impact.",
+    summaryDriver: "Concentration + correlation",
+    whatChanged: "₹60,000 new exposure",
+    worstScenario: "Technology sell-off",
+    possibleOptions: "Smaller position, Lower leverage",
+    disclaimer:
+      "The AI translates calculated engine output. It does not calculate financial values, predict direction, or give buy/sell advice.",
+  },
+};
