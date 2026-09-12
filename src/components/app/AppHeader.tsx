@@ -94,13 +94,13 @@ export function AppHeader({ title = "Pre-trade Risk Check" }: AppHeaderProps) {
             >
               Market data · yfinance
             </Badge>
-            <span className="hidden md:inline text-xs text-ms-muted">
-              {isLoading
-                ? "Loading latest trading day…"
-                : isYfinanceData && latestTradingDay
-                  ? `Latest trading day · ${latestTradingDay}`
-                  : "Live market feed unavailable"}
-            </span>
+            {(isLoading || (isYfinanceData && latestTradingDay)) && (
+              <span className="hidden md:inline text-xs text-ms-muted">
+                {isLoading
+                  ? "Loading latest trading day…"
+                  : `Latest trading day · ${latestTradingDay}`}
+              </span>
+            )}
           </div>
         </div>
       </div>
