@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import risk
+from app.routes import risk, portfolio
 
 app = FastAPI(
     title="MochaShield Risk API",
@@ -17,6 +17,7 @@ app.add_middleware(
 )
 
 app.include_router(risk.router)
+app.include_router(portfolio.router)
 
 @app.get("/")
 async def root():

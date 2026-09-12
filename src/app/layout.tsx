@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { PortfolioProvider } from "@/context/PortfolioContext";
 import "./globals.css";
 
 const inter = Inter({
@@ -25,8 +26,10 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} antialiased`}>
       <body className="min-h-screen bg-background text-foreground font-sans selection:bg-ms-softblue selection:text-ms-navy">
         <TooltipProvider>
-          {children}
-          <Toaster richColors position="bottom-right" />
+          <PortfolioProvider>
+            {children}
+            <Toaster richColors position="bottom-right" />
+          </PortfolioProvider>
         </TooltipProvider>
       </body>
     </html>

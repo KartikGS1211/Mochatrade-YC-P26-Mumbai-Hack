@@ -103,4 +103,12 @@ export interface RiskAnalysisResult {
   scenarios: StressScenarioData[];
   alternatives: AlternativeOption[];
   explanation: GroundedExplanation;
+  dataInfo?: {
+    source: string;
+    rows: number;
+    correlation_rows: number;
+    symbols: string[];
+    start_date: string;
+    end_date: string;
+  };
 }

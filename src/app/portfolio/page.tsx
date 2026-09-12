@@ -1,67 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { AppSidebar } from "@/components/app/AppSidebar";
 import { AppHeader } from "@/components/app/AppHeader";
 import { PortfolioHealthCard } from "@/components/dashboard/PortfolioHealthCard";
 import { HoldingsTable } from "@/components/dashboard/HoldingsTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { INITIAL_PORTFOLIO } from "@/lib/mock-risk-data";
-import type { Portfolio, Holding } from "@/types/risk";
-import { toast } from "sonner";
+import { usePortfolio } from "@/context/PortfolioContext";
+import { formatINR } from "@/lib/utils";
 
 export default function PortfolioPage() {
-  const [portfolio, setPortfolio] = useState<Portfolio>(INITIAL_PORTFOLIO);
-
-  const handleAddHolding = (newHolding: Holding) => {
-    setPortfolio((prev) => {
-      const updated = [...prev.holdings, newHolding];
-      const exposure = updated.reduce((acc, h) => acc + h.exposure, 0);
-      return {
-        ...prev,
-        holdings: updated,
-        openPositions: updated.length,
-        grossExposure: exposure,
-        grossLeverage: Number((exposure / prev.equity).toFixed(2)),
-      };
-    });
-  };
-
-  const handleEditHolding = (updatedHolding: Holding) => {
-    setPortfolio((prev) => {
-      const updated = prev.holdings.map((h) => (h.id === updatedHolding.id ? updatedHolding : h));
-      const exposure = updated.reduce((acc, h) => acc + h.exposure, 0);
-      return {
-        ...prev,
-        holdings: updated,
-        grossExposure: exposure,
-        grossLeverage: Number((exposure / prev.equity).toFixed(2)),
-      };
-    });
-  };
-
-  const handleRemoveHolding = (id: string) => {
-    setPortfolio((prev) => {
-      const updated = prev.holdings.filter((h) => h.id !== id);
-      const exposure = updated.reduce((acc, h) => acc + h.exposure, 0);
-      return {
-        ...prev,
-        holdings: updated,
-        openPositions: updated.length,
-        grossExposure: exposure,
-        grossLeverage: Number((exposure / prev.equity).toFixed(2)),
-      };
-    });
-  };
-
-  const handleResetHoldings = () => {
-    setPortfolio(INITIAL_PORTFOLIO);
-    toast.info("Reset portfolio state");
-  };
-
-  const formatINR = (val: number) =>
-    val.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
+  const { portfolio, isLoading, handleAddHolding, handleEditHolding, handleRemoveHolding, handleResetHoldings } = usePortfolio();
 
   return (
     <div className="flex min-h-screen bg-ms-bg">
@@ -73,6 +22,12 @@ export default function PortfolioPage() {
         <AppHeader title="Portfolio Exposure & Risk Factors" onResetDemo={handleResetHoldings} />
 
         <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-8">
+          {isLoading || !portfolio ? (
+            <div className="flex items-center justify-center h-64">
+              <span className="text-ms-muted text-sm">Loading live portfolio data...</span>
+            </div>
+          ) : (
+            <>
           {/* Header */}
           <div className="space-y-1">
             <span className="text-[11px] font-bold text-ms-blue uppercase tracking-wider">
@@ -151,6 +106,8 @@ export default function PortfolioPage() {
               </CardContent>
             </Card>
           </div>
+          </>
+          )}
         </main>
       </div>
     </div>

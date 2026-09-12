@@ -11,12 +11,18 @@ export function CorrelationHeatmap({ data }: CorrelationHeatmapProps) {
   const { assets, matrix, insight } = data;
 
   // Compute background shade based on correlation value
-  const getCellBg = (val: number) => {
+  const getCellBg = (val: number | null | undefined) => {
+    if (val === null || val === undefined || isNaN(val)) return "bg-slate-50 text-slate-700 border border-slate-100";
     if (val === 1.0) return "bg-ms-navy text-white font-bold";
     if (val >= 0.8) return "bg-rose-100 text-rose-900 font-bold border border-rose-200";
     if (val >= 0.65) return "bg-amber-100 text-amber-900 font-semibold border border-amber-200";
     if (val >= 0.5) return "bg-blue-50 text-blue-900 border border-blue-100";
     return "bg-slate-50 text-slate-700 border border-slate-100";
+  };
+
+  const formatVal = (val: number | null | undefined) => {
+    if (val === null || val === undefined || isNaN(val)) return "—";
+    return val.toFixed(2);
   };
 
   return (
@@ -53,21 +59,22 @@ export function CorrelationHeatmap({ data }: CorrelationHeatmapProps) {
               {assets.map((rowAsset, i) => (
                 <tr key={`row-${rowAsset}-${i}`}>
                   <td className="p-2 text-xs font-bold text-ms-navy text-left">{rowAsset}</td>
-                  {matrix[i].map((val, j) => {
-                    const isHighPair = (rowAsset === "NVDA" && assets[j] === "AMD") || (rowAsset === "AMD" && assets[j] === "NVDA");
+                  {matrix[i] ? matrix[i].map((val, j) => {
+                    const colAsset = assets[j] ?? "?";
+                    const isHighPair = (rowAsset === "NVDA" && colAsset === "AMD") || (rowAsset === "AMD" && colAsset === "NVDA");
                     return (
-                      <td key={`cell-${rowAsset}-${assets[j]}-${i}-${j}`} className="p-1">
+                      <td key={`cell-${rowAsset}-${colAsset}-${i}-${j}`} className="p-1">
                         <div
                           className={`py-2 px-1 rounded-md text-xs font-tabular transition-transform hover:scale-105 ${getCellBg(
                             val
                           )} ${isHighPair ? "ring-2 ring-rose-500 ring-offset-1" : ""}`}
-                          title={`${rowAsset} ↔ ${assets[j]}: ${val.toFixed(2)} correlation`}
+                          title={`${rowAsset} ↔ ${colAsset}: ${formatVal(val)} correlation`}
                         >
-                          {val.toFixed(2)}
+                          {formatVal(val)}
                         </div>
                       </td>
                     );
-                  })}
+                  }) : <td key={`cell-${rowAsset}-missing`} className="p-1" />}
                 </tr>
               ))}
             </tbody>

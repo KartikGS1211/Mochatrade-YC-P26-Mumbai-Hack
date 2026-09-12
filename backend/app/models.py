@@ -65,6 +65,8 @@ class GroundedExplanation(BaseModel):
     possibleOptions: str = ""
     disclaimer: str = ""
 
+from typing import Optional
+
 class RiskAnalysisResult(BaseModel):
     model_config = ConfigDict(extra="allow")
 
@@ -88,6 +90,7 @@ class RiskAnalysisResult(BaseModel):
     alternatives: list[AlternativeOption]
     explanation: GroundedExplanation
     correlationMatrix: dict[str, list[float]] = {}
+    dataInfo: Optional[dict] = None
 
 class RiskScoreResponse(BaseModel):
     currentRisk: int

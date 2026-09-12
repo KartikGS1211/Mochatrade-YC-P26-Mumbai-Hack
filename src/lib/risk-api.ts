@@ -5,10 +5,11 @@
 // Falls back to deterministic mock data if the backend is unreachable.
 // ---------------------------------------------------------------------------
 
-import type { ProposedOrder, RiskAnalysisResult } from "@/types/risk";
+import type { ProposedOrder, RiskAnalysisResult, Portfolio } from "@/types/risk";
 import { DEFAULT_RISK_ANALYSIS } from "@/lib/mock-risk-data";
 
 const API_URL = process.env.NEXT_PUBLIC_RISK_API_URL || "http://localhost:8000/api/v1/risk/analyze";
+const PORTFOLIO_URL = process.env.NEXT_PUBLIC_RISK_API_URL || "http://localhost:8000/api/v1/portfolio";
 const FALLBACK_LATENCY_MS = 800;
 
 /**
@@ -33,6 +34,9 @@ function mapBackendToFrontend(raw: any): RiskAnalysisResult {
     correlation: {
       ...(raw.correlation ?? DEFAULT_RISK_ANALYSIS.correlation),
       assets: [...new Set((raw.correlation ?? DEFAULT_RISK_ANALYSIS.correlation).assets)],
+      matrix: (raw.correlation ?? DEFAULT_RISK_ANALYSIS.correlation).matrix?.map((row: any[]) =>
+        row.map((v: any) => (typeof v === "number" && !isNaN(v)) ? v : 0)
+      ) ?? DEFAULT_RISK_ANALYSIS.correlation.matrix,
     },
     scenarios: raw.scenarios ?? DEFAULT_RISK_ANALYSIS.scenarios,
     alternatives: raw.alternatives ?? DEFAULT_RISK_ANALYSIS.alternatives,
@@ -149,8 +153,43 @@ export async function analyzePortfolioRisk(
     const raw = await response.json();
     return mapBackendToFrontend(raw);
   } catch {
-    // Backend unreachable – fall back to deterministic mock data
     await new Promise((resolve) => setTimeout(resolve, FALLBACK_LATENCY_MS));
     return getFallbackResult(order);
   }
 }
+
+/**
+ * Fetches live portfolio data from the backend (yfinance).
+ * Falls back to mock data if the backend is unreachable.
+ */
+export async function fetchPortfolio(): Promise<Portfolio> {
+  try {
+    const response = await fetch(PORTFOLIO_URL, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Portfolio fetch failed: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, FALLBACK_LATENCY_MS));
+    return getFallbackPortfolio();
+  }
+}
+
+function getFallbackPortfolio(): Portfolio {
+  return {
+    equity: 100_000,
+    grossExposure: 75_000,
+    grossLeverage: 0.75,
+    riskScore: 52,
+    riskLabel: "Moderate",
+    openPositions: 3,
+    dataWindow: "90 days",
+    dataTimestamp: new Date().toISOString(),
+    holdings: [
+      { id: "pos-1", symbol: "AAPL", name: "Apple Inc.", side: "Long", margin: 15_000, leverage: 2, exposure: 30_000, dayChange: "+0.00%", riskTags: ["Technology", "High beta"] },
+      { id: "pos-2", symbol: "AMD", name: "Advanced Micro Devices", side: "Long", margin: 12_500, leverage: 2, exposure: 25_000, dayChange: "+0.00%", riskTags: ["Semiconductors", "High beta"] },
+      { id: "pos-3", symbol: "COIN", name: "Coinbase Global", side: "Long", margin: 10_000, leverage: 2, exposure: 20_000, dayChange: "+0.00%", riskTags: ["Crypto-linked", "High beta"] },
+    ],
+  };
+}
+

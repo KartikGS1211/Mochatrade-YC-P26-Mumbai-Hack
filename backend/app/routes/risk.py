@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from typing import Any
 
 from app.models import RiskAnalyzeRequest, RiskAnalysisResult, ScoreComponent, CorrelationMatrixData
-from app.services.price_data import get_correlation_matrix
+from app.services.price_data import get_correlation_matrix, get_data_info
 from app.services.risk_engine import calc_exposure, normalise_0_100, compute_risk_scores
 from app.services.scenarios import calculate_scenario_losses
 from app.services.explanation import generate_explanation, generate_correlation_insight
@@ -194,6 +194,7 @@ async def analyze_risk(request: RiskAnalyzeRequest):
             alternatives=[alternative_original, alternative_smaller, alternative_lower],
             explanation=explanation,
             correlationMatrix={sym: corr_matrix_rounded[i] for i, sym in enumerate(filtered_assets)},
+            dataInfo=get_data_info(),
         )
 
     except Exception as e:
