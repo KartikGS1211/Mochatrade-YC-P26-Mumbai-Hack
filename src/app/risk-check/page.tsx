@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { AppSidebar } from "@/components/app/AppSidebar";
 import { AppHeader } from "@/components/app/AppHeader";
-import { PresentationModeBanner } from "@/components/app/PresentationMode";
 import { PortfolioHealthCard } from "@/components/dashboard/PortfolioHealthCard";
 import { HoldingsTable } from "@/components/dashboard/HoldingsTable";
 import { ProposedOrderTicket } from "@/components/trade/ProposedOrderTicket";
@@ -14,7 +13,6 @@ import { StressTestPanel } from "@/components/dashboard/StressTestPanel";
 import { AlternativesPanel } from "@/components/dashboard/AlternativesPanel";
 import { ExplanationPanel } from "@/components/dashboard/ExplanationPanel";
 import { usePortfolio } from "@/context/PortfolioContext";
-import type { AlternativeOption } from "@/types/risk";
 
 export default function RiskCheckPage() {
   const {
@@ -31,15 +29,9 @@ export default function RiskCheckPage() {
     handleRunAnalysis,
     handleApplyAlternative,
   } = usePortfolio();
-  const [isPresentationMode, setIsPresentationMode] = useState(false);
 
   const alternativesRef = useRef<HTMLDivElement>(null);
   const orderTicketRef = useRef<HTMLDivElement>(null);
-
-  const handleApplyAlternativeWithScroll = async (alt: AlternativeOption) => {
-    await handleApplyAlternative(alt);
-    orderTicketRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -48,40 +40,6 @@ export default function RiskCheckPage() {
     return () => clearTimeout(timer);
   }, [order.margin, order.leverage, order.symbol, handleRunAnalysis]);
 
-  const handleTriggerPreset = (preset: "default" | "smaller" | "lower") => {
-    if (preset === "default") {
-      handleChangeOrder({ symbol: "NVDA", margin: 20_000, leverage: 3, exposure: 60_000 });
-      handleRunAnalysis({
-        symbol: "NVDA",
-        side: "Long",
-        margin: 20_000,
-        leverage: 3,
-        exposure: 60_000,
-        note: "Review semiconductor overlap before execution",
-      });
-    } else if (preset === "smaller") {
-      handleChangeOrder({ symbol: "NVDA", margin: 10_000, leverage: 3, exposure: 30_000 });
-      handleRunAnalysis({
-        symbol: "NVDA",
-        side: "Long",
-        margin: 10_000,
-        leverage: 3,
-        exposure: 30_000,
-        note: "Review semiconductor overlap before execution",
-      });
-    } else if (preset === "lower") {
-      handleChangeOrder({ symbol: "NVDA", margin: 20_000, leverage: 1, exposure: 20_000 });
-      handleRunAnalysis({
-        symbol: "NVDA",
-        side: "Long",
-        margin: 20_000,
-        leverage: 1,
-        exposure: 20_000,
-        note: "Review semiconductor overlap before execution",
-      });
-    }
-  };
-
   return (
     <div className="flex min-h-screen bg-ms-bg">
       <div className="hidden lg:block">
@@ -89,19 +47,7 @@ export default function RiskCheckPage() {
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <AppHeader
-          title="Pre-trade Risk Check"
-          onResetDemo={handleResetHoldings}
-          isPresentationMode={isPresentationMode}
-          onTogglePresentationMode={() => setIsPresentationMode((prev) => !prev)}
-        />
-
-        {isPresentationMode && (
-          <PresentationModeBanner
-            onExit={() => setIsPresentationMode(false)}
-            onTriggerPreset={handleTriggerPreset}
-          />
-        )}
+        <AppHeader title="Pre-trade Risk Check" />
 
         <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-8">
           {isLoading || !portfolio ? (

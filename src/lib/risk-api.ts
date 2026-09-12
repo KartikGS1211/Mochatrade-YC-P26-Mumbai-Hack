@@ -23,13 +23,23 @@ const PORTFOLIO_URL =
   `${BACKEND_BASE_URL}/api/v1/portfolio`;
 const FALLBACK_LATENCY_MS = 800;
 
+type BackendRiskAnalysis = Partial<RiskAnalysisResult> & {
+  currentRisk?: number;
+  postTradeRisk?: number;
+  riskDelta?: number;
+  portfolioLeverage?: {
+    before?: number;
+    after?: number;
+  };
+};
+
 /**
  * Maps a backend RiskAnalysisResult to the frontend RiskAnalysisResult type.
  * The backend response includes extra fields (currentRisk, postTradeRisk,
  * riskDelta, portfolioLeverage, correlationMatrix) that the frontend type
  * does not need.
  */
-function mapBackendToFrontend(raw: any): RiskAnalysisResult {
+function mapBackendToFrontend(raw: BackendRiskAnalysis): RiskAnalysisResult {
   return {
     currentScore: raw.currentScore ?? raw.currentRisk ?? 52,
     proposedScore: raw.proposedScore ?? raw.postTradeRisk ?? 79,
@@ -53,13 +63,16 @@ function mapBackendToFrontend(raw: any): RiskAnalysisResult {
       ],
       matrix:
         (raw.correlation ?? DEFAULT_RISK_ANALYSIS.correlation).matrix?.map(
-          (row: any[]) =>
-            row.map((v: any) => (typeof v === "number" && !isNaN(v) ? v : 0)),
+          (row) =>
+            row.map((value) =>
+              typeof value === "number" && !Number.isNaN(value) ? value : 0,
+            ),
         ) ?? DEFAULT_RISK_ANALYSIS.correlation.matrix,
     },
     scenarios: raw.scenarios ?? DEFAULT_RISK_ANALYSIS.scenarios,
     alternatives: raw.alternatives ?? DEFAULT_RISK_ANALYSIS.alternatives,
     explanation: raw.explanation ?? DEFAULT_RISK_ANALYSIS.explanation,
+    dataInfo: raw.dataInfo,
   };
 }
 
@@ -189,7 +202,7 @@ export async function analyzePortfolioRisk(
       throw new Error(`Risk evaluation failed: ${response.statusText}`);
     }
 
-    const raw = await response.json();
+    const raw = (await response.json()) as BackendRiskAnalysis;
     return mapBackendToFrontend(raw);
   } catch {
     await new Promise((resolve) => setTimeout(resolve, FALLBACK_LATENCY_MS));
@@ -222,7 +235,8 @@ function getFallbackPortfolio(): Portfolio {
     riskScore: 52,
     riskLabel: "Moderate",
     openPositions: 3,
-    dataWindow: "90 days",
+    dataWindow: "Unavailable",
+    dataSource: "unavailable",
     dataTimestamp: new Date().toISOString(),
     holdings: [
       {

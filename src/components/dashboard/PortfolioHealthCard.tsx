@@ -14,7 +14,6 @@ export function PortfolioHealthCard({ portfolio, analysisResult }: PortfolioHeal
   const baseRiskScore = portfolio.riskScore ?? analysisResult?.currentScore ?? 52;
   const baseRiskLabel = portfolio.riskLabel ?? (baseRiskScore >= 70 ? "High" : baseRiskScore >= 40 ? "Moderate" : "Low");
   const postRiskScore = analysisResult?.proposedScore ?? baseRiskScore;
-  const postGrossExposure = analysisResult ? analysisResult.portfolioLeverageAfter * equity : grossExposure;
   const postGrossLeverage = analysisResult?.portfolioLeverageAfter ?? grossLeverage;
 
   const radius = 40;
@@ -24,8 +23,6 @@ export function PortfolioHealthCard({ portfolio, analysisResult }: PortfolioHeal
 
   const formatINR = (val: number) =>
     val.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
-
-  const riskLabelPost = postRiskScore >= 70 ? "High" : postRiskScore >= 40 ? "Moderate" : "Low";
 
   return (
 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -149,7 +146,7 @@ export function PortfolioHealthCard({ portfolio, analysisResult }: PortfolioHeal
             <div className="flex items-center justify-between mt-1">
               <span className="text-[11px] text-ms-muted font-medium">Data source</span>
               <span className="text-[11px] font-semibold bg-ms-softblue text-ms-blue px-2 py-0.5 rounded">
-                {analysisResult.dataInfo.source === "live" ? "Live yfinance" : "Cached historical"} · {analysisResult.dataInfo.correlation_rows} rows · {analysisResult.dataInfo.start_date} to {analysisResult.dataInfo.end_date}
+                {analysisResult.dataInfo.source === "yfinance" ? "yfinance" : "Market data unavailable"} · {analysisResult.dataInfo.correlation_rows} returns · {analysisResult.dataInfo.start_date} to {analysisResult.dataInfo.end_date}
               </span>
             </div>
           )}

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from typing import Any
 
-from app.services.price_data import load_prices, SYMBOLS
+from app.services.price_data import CORRELATION_ROWS, load_prices
 
 router = APIRouter()
 
@@ -72,6 +72,7 @@ async def get_portfolio():
         gross_exposure = total_exposure
         gross_leverage = round(gross_exposure / DEFAULT_EQUITY, 2) if DEFAULT_EQUITY > 0 else 0
         open_positions = len(holdings)
+        latest_trading_day = prices.index[-1]
 
         return {
             "equity": DEFAULT_EQUITY,
@@ -80,8 +81,9 @@ async def get_portfolio():
             "riskScore": 52,
             "riskLabel": "Moderate",
             "openPositions": open_positions,
-            "dataWindow": "Live yfinance",
-            "dataTimestamp": str(__import__("datetime").datetime.now().isoformat()),
+            "dataWindow": f"{CORRELATION_ROWS} trading days",
+            "dataSource": prices_df.attrs.get("source", "yfinance"),
+            "dataTimestamp": latest_trading_day.isoformat(),
             "holdings": holdings,
         }
 

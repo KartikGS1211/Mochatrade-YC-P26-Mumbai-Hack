@@ -24,6 +24,7 @@ export interface Portfolio {
   riskLabel: string;
   openPositions: number;
   dataWindow: string;
+  dataSource?: "yfinance" | "unavailable";
   dataTimestamp?: string;
   holdings: Holding[];
 }
@@ -105,6 +106,8 @@ export interface RiskAnalysisResult {
   explanation: GroundedExplanation;
   dataInfo?: {
     source: string;
+    retrieval?: "live" | "cache";
+    fetched_at?: string;
     rows: number;
     correlation_rows: number;
     symbols: string[];

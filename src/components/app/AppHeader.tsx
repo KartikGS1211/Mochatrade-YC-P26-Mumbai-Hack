@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { usePortfolio } from "@/context/PortfolioContext";
 import {
   Sheet,
   SheetContent,
@@ -14,9 +14,6 @@ import {
 
 interface AppHeaderProps {
   title?: string;
-  onResetDemo?: () => void;
-  isPresentationMode?: boolean;
-  onTogglePresentationMode?: () => void;
 }
 
 const NAV_ITEMS = [
@@ -26,16 +23,28 @@ const NAV_ITEMS = [
   { name: "Methodology", href: "/methodology", icon: "📐" },
 ];
 
-export function AppHeader({
-  title = "Pre-trade Risk Check",
-  onResetDemo,
-  isPresentationMode = false,
-  onTogglePresentationMode,
-}: AppHeaderProps) {
+function formatMarketDate(value?: string) {
+  if (!value) return null;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+export function AppHeader({ title = "Pre-trade Risk Check" }: AppHeaderProps) {
   const pathname = usePathname();
+  const { portfolio, isLoading } = usePortfolio();
+  const latestTradingDay = formatMarketDate(portfolio?.dataTimestamp);
+  const isYfinanceData = portfolio?.dataSource === "yfinance";
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-ms-border px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-subtle">
+    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-ms-border px-4 sm:px-8 py-3.5 flex items-center shadow-subtle">
       {/* Left title & context */}
       <div className="flex items-center gap-3">
         {/* Mobile menu sheet */}
@@ -83,42 +92,17 @@ export function AppHeader({
               variant="secondary"
               className="bg-ms-softblue text-ms-blue text-[11px] font-semibold hover:bg-ms-softblue border-0 py-0.5"
             >
-              Demo data · 90-day historical window
+              Market data · yfinance
             </Badge>
             <span className="hidden md:inline text-xs text-ms-muted">
-              Last refreshed · 08 Sep 2026, 19:42 IST
+              {isLoading
+                ? "Loading latest trading day…"
+                : isYfinanceData && latestTradingDay
+                  ? `Latest trading day · ${latestTradingDay}`
+                  : "Live market feed unavailable"}
             </span>
           </div>
         </div>
-      </div>
-
-      {/* Action buttons */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        {onTogglePresentationMode && (
-          <Button
-            variant={isPresentationMode ? "default" : "outline"}
-            size="sm"
-            onClick={onTogglePresentationMode}
-            className={`text-xs h-9 font-medium cursor-pointer border-ms-border ${
-              isPresentationMode
-                ? "bg-ms-navy text-white hover:bg-ms-navy/90"
-                : "text-ms-navy hover:bg-ms-bg"
-            }`}
-          >
-            <span>{isPresentationMode ? "Exit presentation" : "Presentation mode"}</span>
-          </Button>
-        )}
-
-        {onResetDemo && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onResetDemo}
-            className="text-xs h-9 font-medium text-ms-muted hover:text-ms-navy hover:bg-ms-bg border-ms-border cursor-pointer"
-          >
-            Reset demo
-          </Button>
-        )}
       </div>
     </header>
   );

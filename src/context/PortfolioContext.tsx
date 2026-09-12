@@ -49,44 +49,41 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const initializedRef = useRef(false);
 
   useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
+    const initializationTimer = window.setTimeout(() => {
+      if (initializedRef.current) return;
+      initializedRef.current = true;
 
-    // Load stored order
-    const storedOrder = sessionStorage.getItem(ORDER_STORAGE_KEY);
-    if (storedOrder) {
-      try {
-        setOrder(JSON.parse(storedOrder));
-      } catch {}
-    }
-
-    // Load stored analysis
-    const storedAnalysis = sessionStorage.getItem(ANALYSIS_STORAGE_KEY);
-    if (storedAnalysis) {
-      try {
-        setAnalysisResult(JSON.parse(storedAnalysis));
-      } catch {}
-    }
-
-    // Load stored portfolio
-    const storedPortfolio = sessionStorage.getItem(STORAGE_KEY);
-    if (storedPortfolio) {
-      try {
-        const parsed: Portfolio = JSON.parse(storedPortfolio);
-        setPortfolio(parsed);
-        setIsLoading(false);
-      } catch {
-        fetchPortfolio().then((data) => {
-          setPortfolio(data);
-          setIsLoading(false);
-        });
+      const storedOrder = sessionStorage.getItem(ORDER_STORAGE_KEY);
+      if (storedOrder) {
+        try {
+          setOrder(JSON.parse(storedOrder));
+        } catch {}
       }
-    } else {
+
+      const storedAnalysis = sessionStorage.getItem(ANALYSIS_STORAGE_KEY);
+      if (storedAnalysis) {
+        try {
+          setAnalysisResult(JSON.parse(storedAnalysis));
+        } catch {}
+      }
+
+      // Show a stored portfolio immediately, then refresh it from yfinance.
+      const storedPortfolio = sessionStorage.getItem(STORAGE_KEY);
+      if (storedPortfolio) {
+        try {
+          const parsed: Portfolio = JSON.parse(storedPortfolio);
+          setPortfolio(parsed);
+          setIsLoading(false);
+        } catch {}
+      }
+
       fetchPortfolio().then((data) => {
         setPortfolio(data);
         setIsLoading(false);
       });
-    }
+    }, 0);
+
+    return () => window.clearTimeout(initializationTimer);
   }, []);
 
   useEffect(() => {

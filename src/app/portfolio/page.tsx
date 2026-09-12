@@ -27,7 +27,7 @@ export default function PortfolioPage() {
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <AppHeader title="Portfolio Exposure & Risk Factors" onResetDemo={handleResetHoldings} />
+        <AppHeader title="Portfolio Exposure & Risk Factors" />
 
         <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-8">
           {isLoading || !portfolio ? (
