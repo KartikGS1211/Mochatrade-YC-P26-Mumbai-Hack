@@ -10,7 +10,15 @@ import { usePortfolio } from "@/context/PortfolioContext";
 import { formatINR } from "@/lib/utils";
 
 export default function PortfolioPage() {
-  const { portfolio, isLoading, handleAddHolding, handleEditHolding, handleRemoveHolding, handleResetHoldings } = usePortfolio();
+  const {
+    portfolio,
+    isLoading,
+    analysisResult,
+    handleAddHolding,
+    handleEditHolding,
+    handleRemoveHolding,
+    handleResetHoldings,
+  } = usePortfolio();
 
   return (
     <div className="flex min-h-screen bg-ms-bg">
@@ -42,7 +50,7 @@ export default function PortfolioPage() {
           </div>
 
           {/* Health Gauge & Capital Summary */}
-          <PortfolioHealthCard portfolio={portfolio} />
+          <PortfolioHealthCard portfolio={portfolio} analysisResult={analysisResult} />
 
           {/* Holdings Table */}
           <HoldingsTable

@@ -14,61 +14,31 @@ import { StressTestPanel } from "@/components/dashboard/StressTestPanel";
 import { AlternativesPanel } from "@/components/dashboard/AlternativesPanel";
 import { ExplanationPanel } from "@/components/dashboard/ExplanationPanel";
 import { usePortfolio } from "@/context/PortfolioContext";
-import { DEFAULT_PROPOSED_ORDER, DEFAULT_RISK_ANALYSIS } from "@/lib/mock-risk-data";
-import { analyzePortfolioRisk } from "@/lib/risk-api";
-import type {
-  ProposedOrder,
-  RiskAnalysisResult,
-  AlternativeOption,
-} from "@/types/risk";
-import { toast } from "sonner";
+import type { AlternativeOption } from "@/types/risk";
 
 export default function RiskCheckPage() {
-  const { portfolio, isLoading, handleAddHolding, handleEditHolding, handleRemoveHolding, handleResetHoldings } = usePortfolio();
-  const [order, setProposedOrder] = useState<ProposedOrder>(DEFAULT_PROPOSED_ORDER);
-  const [analysisResult, setAnalysisResult] = useState<RiskAnalysisResult | null>(
-    DEFAULT_RISK_ANALYSIS
-  );
+  const {
+    portfolio,
+    isLoading,
+    order,
+    analysisResult,
+    isAnalyzing,
+    handleAddHolding,
+    handleEditHolding,
+    handleRemoveHolding,
+    handleResetHoldings,
+    handleChangeOrder,
+    handleRunAnalysis,
+    handleApplyAlternative,
+  } = usePortfolio();
   const [isPresentationMode, setIsPresentationMode] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const alternativesRef = useRef<HTMLDivElement>(null);
   const orderTicketRef = useRef<HTMLDivElement>(null);
 
-  const handleChangeOrder = (updated: Partial<ProposedOrder>) => {
-    setProposedOrder((prev) => ({ ...prev, ...updated }));
-  };
-
-  const handleRunAnalysis = async () => {
-    setIsAnalyzing(true);
-    try {
-      const result = await analyzePortfolioRisk(order);
-      setAnalysisResult(result);
-      toast.success("Risk index calculated successfully");
-    } catch {
-      toast.error("Error evaluating portfolio risk");
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleApplyAlternative = async (alt: AlternativeOption) => {
-    const updatedOrder: ProposedOrder = {
-      ...order,
-      margin: alt.margin,
-      leverage: alt.leverage,
-      exposure: alt.exposure,
-    };
-    setProposedOrder(updatedOrder);
-    setIsAnalyzing(true);
-    try {
-      const result = await analyzePortfolioRisk(updatedOrder);
-      setAnalysisResult(result);
-      toast.success(`Applied ${alt.title} (Score: ${alt.riskScore})`);
-      orderTicketRef.current?.scrollIntoView({ behavior: "smooth" });
-    } finally {
-      setIsAnalyzing(false);
-    }
+  const handleApplyAlternativeWithScroll = async (alt: AlternativeOption) => {
+    await handleApplyAlternative(alt);
+    orderTicketRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -76,18 +46,39 @@ export default function RiskCheckPage() {
       handleRunAnalysis();
     }, 600);
     return () => clearTimeout(timer);
-  }, [order.margin, order.leverage, order.symbol]);
+  }, [order.margin, order.leverage, order.symbol, handleRunAnalysis]);
 
   const handleTriggerPreset = (preset: "default" | "smaller" | "lower") => {
     if (preset === "default") {
       handleChangeOrder({ symbol: "NVDA", margin: 20_000, leverage: 3, exposure: 60_000 });
-      handleRunAnalysis();
+      handleRunAnalysis({
+        symbol: "NVDA",
+        side: "Long",
+        margin: 20_000,
+        leverage: 3,
+        exposure: 60_000,
+        note: "Review semiconductor overlap before execution",
+      });
     } else if (preset === "smaller") {
       handleChangeOrder({ symbol: "NVDA", margin: 10_000, leverage: 3, exposure: 30_000 });
-      handleRunAnalysis();
+      handleRunAnalysis({
+        symbol: "NVDA",
+        side: "Long",
+        margin: 10_000,
+        leverage: 3,
+        exposure: 30_000,
+        note: "Review semiconductor overlap before execution",
+      });
     } else if (preset === "lower") {
       handleChangeOrder({ symbol: "NVDA", margin: 20_000, leverage: 1, exposure: 20_000 });
-      handleRunAnalysis();
+      handleRunAnalysis({
+        symbol: "NVDA",
+        side: "Long",
+        margin: 20_000,
+        leverage: 1,
+        exposure: 20_000,
+        note: "Review semiconductor overlap before execution",
+      });
     }
   };
 

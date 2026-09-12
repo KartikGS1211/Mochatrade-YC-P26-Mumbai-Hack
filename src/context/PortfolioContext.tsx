@@ -1,43 +1,78 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
-import type { Portfolio, Holding } from "@/types/risk";
-import { fetchPortfolio } from "@/lib/risk-api";
+import type { Portfolio, Holding, ProposedOrder, RiskAnalysisResult, AlternativeOption } from "@/types/risk";
+import { fetchPortfolio, analyzePortfolioRisk } from "@/lib/risk-api";
+import { DEFAULT_PROPOSED_ORDER, DEFAULT_RISK_ANALYSIS } from "@/lib/mock-risk-data";
 import { toast } from "sonner";
 
 interface PortfolioContextType {
   portfolio: Portfolio | null;
   isLoading: boolean;
+  order: ProposedOrder;
+  analysisResult: RiskAnalysisResult | null;
+  isAnalyzing: boolean;
   handleAddHolding: (h: Holding) => void;
   handleEditHolding: (h: Holding) => void;
   handleRemoveHolding: (id: string) => void;
   handleResetHoldings: () => void;
+  handleChangeOrder: (updated: Partial<ProposedOrder>) => void;
+  handleRunAnalysis: (customOrder?: ProposedOrder) => Promise<RiskAnalysisResult | undefined>;
+  handleApplyAlternative: (alt: AlternativeOption) => Promise<void>;
 }
 
 const PortfolioContext = createContext<PortfolioContextType>({
   portfolio: null,
   isLoading: true,
+  order: DEFAULT_PROPOSED_ORDER,
+  analysisResult: DEFAULT_RISK_ANALYSIS,
+  isAnalyzing: false,
   handleAddHolding: () => {},
   handleEditHolding: () => {},
   handleRemoveHolding: () => {},
   handleResetHoldings: () => {},
+  handleChangeOrder: () => {},
+  handleRunAnalysis: async () => undefined,
+  handleApplyAlternative: async () => {},
 });
 
 const STORAGE_KEY = "mochashield-portfolio";
+const ORDER_STORAGE_KEY = "mochashield-order";
+const ANALYSIS_STORAGE_KEY = "mochashield-analysis";
 
 export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [order, setOrder] = useState<ProposedOrder>(DEFAULT_PROPOSED_ORDER);
+  const [analysisResult, setAnalysisResult] = useState<RiskAnalysisResult | null>(DEFAULT_RISK_ANALYSIS);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const initializedRef = useRef(false);
 
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-    if (stored) {
+    // Load stored order
+    const storedOrder = sessionStorage.getItem(ORDER_STORAGE_KEY);
+    if (storedOrder) {
       try {
-        const parsed: Portfolio = JSON.parse(stored);
+        setOrder(JSON.parse(storedOrder));
+      } catch {}
+    }
+
+    // Load stored analysis
+    const storedAnalysis = sessionStorage.getItem(ANALYSIS_STORAGE_KEY);
+    if (storedAnalysis) {
+      try {
+        setAnalysisResult(JSON.parse(storedAnalysis));
+      } catch {}
+    }
+
+    // Load stored portfolio
+    const storedPortfolio = sessionStorage.getItem(STORAGE_KEY);
+    if (storedPortfolio) {
+      try {
+        const parsed: Portfolio = JSON.parse(storedPortfolio);
         setPortfolio(parsed);
         setIsLoading(false);
       } catch {
@@ -59,6 +94,16 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(portfolio));
     }
   }, [portfolio]);
+
+  useEffect(() => {
+    sessionStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(order));
+  }, [order]);
+
+  useEffect(() => {
+    if (analysisResult) {
+      sessionStorage.setItem(ANALYSIS_STORAGE_KEY, JSON.stringify(analysisResult));
+    }
+  }, [analysisResult]);
 
   const handleAddHolding = useCallback((newHolding: Holding) => {
     setPortfolio((prev) => {
@@ -89,9 +134,51 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const handleChangeOrder = useCallback((updated: Partial<ProposedOrder>) => {
+    setOrder((prev) => ({ ...prev, ...updated }));
+  }, []);
+
+  const handleRunAnalysis = useCallback(async (customOrder?: ProposedOrder) => {
+    const targetOrder = customOrder || order;
+    setIsAnalyzing(true);
+    try {
+      const result = await analyzePortfolioRisk(targetOrder);
+      setAnalysisResult(result);
+      return result;
+    } catch {
+      toast.error("Error evaluating portfolio risk");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [order]);
+
+  const handleApplyAlternative = useCallback(async (alt: AlternativeOption) => {
+    const updatedOrder: ProposedOrder = {
+      ...order,
+      margin: alt.margin,
+      leverage: alt.leverage,
+      exposure: alt.exposure,
+    };
+    setOrder(updatedOrder);
+    setIsAnalyzing(true);
+    try {
+      const result = await analyzePortfolioRisk(updatedOrder);
+      setAnalysisResult(result);
+      toast.success(`Applied ${alt.title} (Score: ${alt.riskScore})`);
+    } catch {
+      toast.error("Error evaluating portfolio risk");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [order]);
+
   const handleResetHoldings = useCallback(() => {
     setIsLoading(true);
     sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(ORDER_STORAGE_KEY);
+    sessionStorage.removeItem(ANALYSIS_STORAGE_KEY);
+    setOrder(DEFAULT_PROPOSED_ORDER);
+    setAnalysisResult(DEFAULT_RISK_ANALYSIS);
     initializedRef.current = false;
     fetchPortfolio().then((data) => {
       setPortfolio(data);
@@ -101,7 +188,22 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <PortfolioContext.Provider value={{ portfolio, isLoading, handleAddHolding, handleEditHolding, handleRemoveHolding, handleResetHoldings }}>
+    <PortfolioContext.Provider
+      value={{
+        portfolio,
+        isLoading,
+        order,
+        analysisResult,
+        isAnalyzing,
+        handleAddHolding,
+        handleEditHolding,
+        handleRemoveHolding,
+        handleResetHoldings,
+        handleChangeOrder,
+        handleRunAnalysis,
+        handleApplyAlternative,
+      }}
+    >
       {children}
     </PortfolioContext.Provider>
   );

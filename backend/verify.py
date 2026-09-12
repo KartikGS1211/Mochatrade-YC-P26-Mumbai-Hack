@@ -1,4 +1,5 @@
 import subprocess, time, json, os, shutil, glob
+# pyrefly: ignore [missing-import]
 from fastapi.testclient import TestClient
 
 # Clear all cache

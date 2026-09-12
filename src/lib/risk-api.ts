@@ -5,11 +5,19 @@
 // Falls back to deterministic mock data if the backend is unreachable.
 // ---------------------------------------------------------------------------
 
-import type { ProposedOrder, RiskAnalysisResult, Portfolio } from "@/types/risk";
+import type {
+  ProposedOrder,
+  RiskAnalysisResult,
+  Portfolio,
+} from "@/types/risk";
 import { DEFAULT_RISK_ANALYSIS } from "@/lib/mock-risk-data";
 
-const API_URL = process.env.NEXT_PUBLIC_RISK_API_URL || "http://localhost:8000/api/v1/risk/analyze";
-const PORTFOLIO_URL = process.env.NEXT_PUBLIC_RISK_API_URL || "http://localhost:8000/api/v1/portfolio";
+const API_URL =
+  process.env.NEXT_PUBLIC_RISK_API_URL ||
+  "http://localhost:8000/api/v1/risk/analyze";
+const PORTFOLIO_URL =
+  process.env.NEXT_PUBLIC_RISK_API_URL ||
+  "http://localhost:8000/api/v1/portfolio";
 const FALLBACK_LATENCY_MS = 800;
 
 /**
@@ -24,8 +32,10 @@ function mapBackendToFrontend(raw: any): RiskAnalysisResult {
     proposedScore: raw.proposedScore ?? raw.postTradeRisk ?? 79,
     delta: raw.delta ?? raw.riskDelta ?? 27,
     orderLeverage: raw.orderLeverage ?? 3,
-    portfolioLeverageBefore: raw.portfolioLeverageBefore ?? raw.portfolioLeverage?.before ?? 0.75,
-    portfolioLeverageAfter: raw.portfolioLeverageAfter ?? raw.portfolioLeverage?.after ?? 1.35,
+    portfolioLeverageBefore:
+      raw.portfolioLeverageBefore ?? raw.portfolioLeverage?.before ?? 0.75,
+    portfolioLeverageAfter:
+      raw.portfolioLeverageAfter ?? raw.portfolioLeverage?.after ?? 1.35,
     alertHeadline: raw.alertHeadline ?? "",
     alertStatement: raw.alertStatement ?? "",
     primaryDriver: raw.primaryDriver ?? "Concentration + correlation",
@@ -33,10 +43,16 @@ function mapBackendToFrontend(raw: any): RiskAnalysisResult {
     components: raw.components ?? DEFAULT_RISK_ANALYSIS.components,
     correlation: {
       ...(raw.correlation ?? DEFAULT_RISK_ANALYSIS.correlation),
-      assets: [...new Set((raw.correlation ?? DEFAULT_RISK_ANALYSIS.correlation).assets)],
-      matrix: (raw.correlation ?? DEFAULT_RISK_ANALYSIS.correlation).matrix?.map((row: any[]) =>
-        row.map((v: any) => (typeof v === "number" && !isNaN(v)) ? v : 0)
-      ) ?? DEFAULT_RISK_ANALYSIS.correlation.matrix,
+      assets: [
+        ...new Set(
+          (raw.correlation ?? DEFAULT_RISK_ANALYSIS.correlation).assets,
+        ),
+      ],
+      matrix:
+        (raw.correlation ?? DEFAULT_RISK_ANALYSIS.correlation).matrix?.map(
+          (row: any[]) =>
+            row.map((v: any) => (typeof v === "number" && !isNaN(v) ? v : 0)),
+        ) ?? DEFAULT_RISK_ANALYSIS.correlation.matrix,
     },
     scenarios: raw.scenarios ?? DEFAULT_RISK_ANALYSIS.scenarios,
     alternatives: raw.alternatives ?? DEFAULT_RISK_ANALYSIS.alternatives,
@@ -52,7 +68,9 @@ function getFallbackResult(order: ProposedOrder): RiskAnalysisResult {
   const portfolioEquity = 100_000;
   const initialGrossExposure = 75_000;
   const newGrossExposure = initialGrossExposure + exposure;
-  const newGrossLeverage = Number((newGrossExposure / portfolioEquity).toFixed(2));
+  const newGrossLeverage = Number(
+    (newGrossExposure / portfolioEquity).toFixed(2),
+  );
 
   let calculatedScore = 52;
   let calculatedDelta = 0;
@@ -69,7 +87,10 @@ function getFallbackResult(order: ProposedOrder): RiskAnalysisResult {
       calculatedDelta = 27;
     }
   } else {
-    const factor = Math.min(1.8, Math.max(0.6, (exposure / 60_000) * (order.leverage / 3)));
+    const factor = Math.min(
+      1.8,
+      Math.max(0.6, (exposure / 60_000) * (order.leverage / 3)),
+    );
     calculatedDelta = Math.round(27 * factor);
     calculatedScore = Math.min(95, Math.max(52, 52 + calculatedDelta));
   }
@@ -123,7 +144,7 @@ function getFallbackResult(order: ProposedOrder): RiskAnalysisResult {
  * if the backend is unreachable.
  */
 export async function analyzePortfolioRisk(
-  order: ProposedOrder
+  order: ProposedOrder,
 ): Promise<RiskAnalysisResult> {
   try {
     const response = await fetch(API_URL, {
@@ -186,10 +207,39 @@ function getFallbackPortfolio(): Portfolio {
     dataWindow: "90 days",
     dataTimestamp: new Date().toISOString(),
     holdings: [
-      { id: "pos-1", symbol: "AAPL", name: "Apple Inc.", side: "Long", margin: 15_000, leverage: 2, exposure: 30_000, dayChange: "+0.00%", riskTags: ["Technology", "High beta"] },
-      { id: "pos-2", symbol: "AMD", name: "Advanced Micro Devices", side: "Long", margin: 12_500, leverage: 2, exposure: 25_000, dayChange: "+0.00%", riskTags: ["Semiconductors", "High beta"] },
-      { id: "pos-3", symbol: "COIN", name: "Coinbase Global", side: "Long", margin: 10_000, leverage: 2, exposure: 20_000, dayChange: "+0.00%", riskTags: ["Crypto-linked", "High beta"] },
+      {
+        id: "pos-1",
+        symbol: "AAPL",
+        name: "Apple Inc.",
+        side: "Long",
+        margin: 15_000,
+        leverage: 2,
+        exposure: 30_000,
+        dayChange: "+0.00%",
+        riskTags: ["Technology", "High beta"],
+      },
+      {
+        id: "pos-2",
+        symbol: "AMD",
+        name: "Advanced Micro Devices",
+        side: "Long",
+        margin: 12_500,
+        leverage: 2,
+        exposure: 25_000,
+        dayChange: "+0.00%",
+        riskTags: ["Semiconductors", "High beta"],
+      },
+      {
+        id: "pos-3",
+        symbol: "COIN",
+        name: "Coinbase Global",
+        side: "Long",
+        margin: 10_000,
+        leverage: 2,
+        exposure: 20_000,
+        dayChange: "+0.00%",
+        riskTags: ["Crypto-linked", "High beta"],
+      },
     ],
   };
 }
-
