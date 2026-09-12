@@ -143,7 +143,7 @@ export default function RiskCheckPage() {
               <ProposedOrderTicket
                 order={order}
                 onChangeOrder={handleChangeOrder}
-                onSubmit={handleRunAnalysis}
+                onSubmit={() => handleRunAnalysis()}
                 isLoading={isAnalyzing}
               />
             </div>

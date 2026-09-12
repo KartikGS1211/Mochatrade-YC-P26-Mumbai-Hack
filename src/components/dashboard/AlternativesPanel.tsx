@@ -14,8 +14,12 @@ export function AlternativesPanel({
   alternatives,
   onApplyAlternative,
 }: AlternativesPanelProps) {
-  const formatINR = (val: number) =>
-    val.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
+  const formatINR = (val?: number | null) =>
+    (typeof val === "number" && !isNaN(val) ? val : 0).toLocaleString("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    });
 
   return (
     <Card className="bg-white border-ms-border shadow-card" id="alternatives-section">

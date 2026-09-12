@@ -138,8 +138,13 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     setOrder((prev) => ({ ...prev, ...updated }));
   }, []);
 
-  const handleRunAnalysis = useCallback(async (customOrder?: ProposedOrder) => {
-    const targetOrder = customOrder || order;
+  const handleRunAnalysis = useCallback(async (customOrder?: unknown) => {
+    const isOrderObj =
+      Boolean(customOrder &&
+      typeof customOrder === "object" &&
+      "symbol" in customOrder &&
+      typeof (customOrder as ProposedOrder).symbol === "string");
+    const targetOrder = isOrderObj ? (customOrder as ProposedOrder) : order;
     setIsAnalyzing(true);
     try {
       const result = await analyzePortfolioRisk(targetOrder);

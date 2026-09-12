@@ -63,10 +63,24 @@ function mapBackendToFrontend(raw: any): RiskAnalysisResult {
   };
 }
 
+function sanitizeOrder(order: any): ProposedOrder {
+  const margin = typeof order?.margin === "number" && !isNaN(order.margin) ? order.margin : 20_000;
+  const leverage = typeof order?.leverage === "number" && !isNaN(order.leverage) ? order.leverage : 3;
+  return {
+    symbol: order?.symbol || "NVDA",
+    side: order?.side || "Long",
+    margin,
+    leverage,
+    exposure: typeof order?.exposure === "number" && !isNaN(order.exposure) ? order.exposure : margin * leverage,
+    note: order?.note || "",
+  };
+}
+
 /**
  * Generates a deterministic fallback result when the backend is unreachable.
  */
-function getFallbackResult(order: ProposedOrder): RiskAnalysisResult {
+function getFallbackResult(rawOrder: ProposedOrder): RiskAnalysisResult {
+  const order = sanitizeOrder(rawOrder);
   const exposure = order.margin * order.leverage;
   const portfolioEquity = 100_000;
   const initialGrossExposure = 75_000;
@@ -147,8 +161,9 @@ function getFallbackResult(order: ProposedOrder): RiskAnalysisResult {
  * if the backend is unreachable.
  */
 export async function analyzePortfolioRisk(
-  order: ProposedOrder,
+  rawOrder: ProposedOrder,
 ): Promise<RiskAnalysisResult> {
+  const order = sanitizeOrder(rawOrder);
   try {
     const response = await fetch(API_URL, {
       method: "POST",
