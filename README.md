@@ -2,6 +2,29 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Configure market data and Grok explanations
+
+Install the backend dependencies and provide an xAI API key:
+
+```bash
+cd backend
+python -m pip install -r requirements.txt
+cp .env.example .env
+```
+
+Set `XAI_API_KEY` in `backend/.env`, then start the API with that environment file:
+
+```bash
+uvicorn app.main:app --reload --port 8000 --env-file .env
+```
+
+`XAI_MODEL` defaults to `grok-4.6`. When the key or Grok API is unavailable,
+the risk endpoint returns a clearly labelled rule-based explanation derived
+from the current order instead of static demo copy.
+
+From the project root, set `NEXT_PUBLIC_API_BASE_URL` if the API is not served
+from `http://localhost:8000`.
+
 First, run the development server:
 
 ```bash

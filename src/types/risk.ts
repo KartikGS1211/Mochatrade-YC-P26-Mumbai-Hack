@@ -104,6 +104,8 @@ export interface RiskAnalysisResult {
   scenarios: StressScenarioData[];
   alternatives: AlternativeOption[];
   explanation: GroundedExplanation;
+  explanationSource?: "grok" | "rule-based";
+  explanationModel?: string;
   dataInfo?: {
     source: string;
     retrieval?: "live" | "cache";

@@ -200,13 +200,13 @@ export const DEFAULT_RISK_ANALYSIS: RiskAnalysisResult = {
     },
   ],
   explanation: {
-    headline: "MochaShield AI Explanation",
+    headline: "MochaShield Risk Explanation",
     narrative:
-      "Your largest vulnerability is combined high-beta technology exposure, not a single ticker. The proposed NVDA order adds ₹60,000 of leveraged exposure to a portfolio already holding AAPL, AMD and COIN. The strongest overlap is with AMD. In the hypothetical technology sell-off scenario, the new order increases the estimated portfolio loss. A smaller position or lower leverage produces a lower portfolio-risk impact.",
-    summaryDriver: "Concentration + correlation",
-    whatChanged: "₹60,000 new exposure",
-    worstScenario: "Technology sell-off",
-    possibleOptions: "Smaller position, Lower leverage",
+      "Update the pre-trade order ticket and run the portfolio risk check to generate an explanation grounded in the current order, portfolio, correlations, and stress-test results.",
+    summaryDriver: "Awaiting analysis",
+    whatChanged: "Awaiting analysis",
+    worstScenario: "Awaiting analysis",
+    possibleOptions: "Generated after analysis",
     disclaimer:
       "The AI translates calculated engine output. It does not calculate financial values, predict direction, or give buy/sell advice.",
   },

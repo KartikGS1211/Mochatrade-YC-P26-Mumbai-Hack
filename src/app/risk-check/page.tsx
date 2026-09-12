@@ -128,7 +128,12 @@ export default function RiskCheckPage() {
                   />
                 </div>
 
-                <ExplanationPanel explanation={analysisResult.explanation} />
+                <ExplanationPanel
+                  explanation={analysisResult.explanation}
+                  source={analysisResult.explanationSource}
+                  model={analysisResult.explanationModel}
+                  isLoading={isAnalyzing}
+                />
               </>
             )}
           </div>

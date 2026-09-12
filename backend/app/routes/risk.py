@@ -1,6 +1,4 @@
 from fastapi import APIRouter, HTTPException
-from typing import Any
-
 from app.models import RiskAnalyzeRequest, RiskAnalysisResult, ScoreComponent, CorrelationMatrixData
 from app.services.price_data import get_correlation_matrix, get_data_info, load_prices
 from app.services.risk_engine import calc_exposure, normalise_0_100, compute_risk_scores
@@ -22,6 +20,7 @@ async def analyze_risk(request: RiskAnalyzeRequest):
             "margin": proposed_order.margin,
             "leverage": proposed_order.leverage,
             "exposure": calc_exposure(proposed_order.margin, proposed_order.leverage),
+            "note": proposed_order.note,
         }
 
         positions_dicts = [
@@ -164,15 +163,24 @@ async def analyze_risk(request: RiskAnalyzeRequest):
             "buttonLabel": "Apply lower leverage",
         }
 
-        explanation = generate_explanation(
-            {"concentration": {"before": conc_before, "after": conc_after, "delta": conc_after - conc_before},
-             "correlation": {"before": corr_before, "after": corr_after, "delta": corr_after - corr_before},
-             "leverage": {"before": lev_before, "after": lev_after, "delta": lev_after - lev_before},
-             "scenarioRisk": {"before": scen_before, "after": scen_after, "delta": scen_after - scen_before}},
-            {"assets": filtered_assets, "matrix": corr_matrix_rounded},
-            scenarios,
-            proposed_dict,
-        )
+        explanation, explanation_source, explanation_model = await generate_explanation({
+            "equity": equity,
+            "positions": positions_dicts,
+            "proposedOrder": proposed_dict,
+            "scores": {
+                "before": composite_before,
+                "after": composite_after,
+                "delta": delta,
+            },
+            "portfolioLeverage": {
+                "before": round(gross_lev_before, 2),
+                "after": round(gross_lev_after, 2),
+            },
+            "components": [component.model_dump() for component in components_list],
+            "correlation": correlation_data.model_dump(),
+            "scenarios": [scenario.model_dump() for scenario in scenarios],
+            "alternatives": [alternative_original, alternative_smaller, alternative_lower],
+        })
 
         return RiskAnalysisResult(
             currentScore=composite_before,
@@ -194,6 +202,8 @@ async def analyze_risk(request: RiskAnalyzeRequest):
             scenarios=scenarios,
             alternatives=[alternative_original, alternative_smaller, alternative_lower],
             explanation=explanation,
+            explanationSource=explanation_source,
+            explanationModel=explanation_model,
             correlationMatrix={sym: corr_matrix_rounded[i] for i, sym in enumerate(filtered_assets)},
             dataInfo=get_data_info(prices_df),
         )

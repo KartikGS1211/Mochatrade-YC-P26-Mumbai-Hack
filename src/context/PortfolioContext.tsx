@@ -47,6 +47,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [analysisResult, setAnalysisResult] = useState<RiskAnalysisResult | null>(DEFAULT_RISK_ANALYSIS);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const initializedRef = useRef(false);
+  const analysisRequestIdRef = useRef(0);
 
   useEffect(() => {
     const initializationTimer = window.setTimeout(() => {
@@ -135,24 +136,26 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     setOrder((prev) => ({ ...prev, ...updated }));
   }, []);
 
-  const handleRunAnalysis = useCallback(async (customOrder?: unknown) => {
-    const isOrderObj =
-      Boolean(customOrder &&
-      typeof customOrder === "object" &&
-      "symbol" in customOrder &&
-      typeof (customOrder as ProposedOrder).symbol === "string");
-    const targetOrder = isOrderObj ? (customOrder as ProposedOrder) : order;
+  const handleRunAnalysis = useCallback(async (customOrder?: ProposedOrder) => {
+    const targetOrder = customOrder ?? order;
+    const requestId = ++analysisRequestIdRef.current;
     setIsAnalyzing(true);
     try {
-      const result = await analyzePortfolioRisk(targetOrder);
-      setAnalysisResult(result);
+      const result = await analyzePortfolioRisk(targetOrder, portfolio);
+      if (requestId === analysisRequestIdRef.current) {
+        setAnalysisResult(result);
+      }
       return result;
     } catch {
-      toast.error("Error evaluating portfolio risk");
+      if (requestId === analysisRequestIdRef.current) {
+        toast.error("Error evaluating portfolio risk");
+      }
     } finally {
-      setIsAnalyzing(false);
+      if (requestId === analysisRequestIdRef.current) {
+        setIsAnalyzing(false);
+      }
     }
-  }, [order]);
+  }, [order, portfolio]);
 
   const handleApplyAlternative = useCallback(async (alt: AlternativeOption) => {
     const updatedOrder: ProposedOrder = {
@@ -162,19 +165,27 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       exposure: alt.exposure,
     };
     setOrder(updatedOrder);
+    const requestId = ++analysisRequestIdRef.current;
     setIsAnalyzing(true);
     try {
-      const result = await analyzePortfolioRisk(updatedOrder);
-      setAnalysisResult(result);
-      toast.success(`Applied ${alt.title} (Score: ${alt.riskScore})`);
+      const result = await analyzePortfolioRisk(updatedOrder, portfolio);
+      if (requestId === analysisRequestIdRef.current) {
+        setAnalysisResult(result);
+        toast.success(`Applied ${alt.title} (Score: ${alt.riskScore})`);
+      }
     } catch {
-      toast.error("Error evaluating portfolio risk");
+      if (requestId === analysisRequestIdRef.current) {
+        toast.error("Error evaluating portfolio risk");
+      }
     } finally {
-      setIsAnalyzing(false);
+      if (requestId === analysisRequestIdRef.current) {
+        setIsAnalyzing(false);
+      }
     }
-  }, [order]);
+  }, [order, portfolio]);
 
   const handleResetHoldings = useCallback(() => {
+    analysisRequestIdRef.current += 1;
     setIsLoading(true);
     sessionStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem(ORDER_STORAGE_KEY);

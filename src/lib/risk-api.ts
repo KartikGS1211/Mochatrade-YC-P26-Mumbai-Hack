@@ -72,6 +72,8 @@ function mapBackendToFrontend(raw: BackendRiskAnalysis): RiskAnalysisResult {
     scenarios: raw.scenarios ?? DEFAULT_RISK_ANALYSIS.scenarios,
     alternatives: raw.alternatives ?? DEFAULT_RISK_ANALYSIS.alternatives,
     explanation: raw.explanation ?? DEFAULT_RISK_ANALYSIS.explanation,
+    explanationSource: raw.explanationSource ?? "rule-based",
+    explanationModel: raw.explanationModel,
     dataInfo: raw.dataInfo,
   };
 }
@@ -101,6 +103,16 @@ function getFallbackResult(rawOrder: ProposedOrder): RiskAnalysisResult {
   const newGrossLeverage = Number(
     (newGrossExposure / portfolioEquity).toFixed(2),
   );
+  const formattedMargin = order.margin.toLocaleString("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  });
+  const formattedExposure = exposure.toLocaleString("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  });
 
   let calculatedScore = 52;
   let calculatedDelta = 0;
@@ -133,6 +145,18 @@ function getFallbackResult(rawOrder: ProposedOrder): RiskAnalysisResult {
     orderLeverage: order.leverage,
     portfolioLeverageBefore: 0.75,
     portfolioLeverageAfter: newGrossLeverage,
+    explanationSource: "rule-based",
+    explanationModel: undefined,
+    explanation: {
+      headline: "MochaShield Risk Explanation",
+      narrative: `The proposed ${order.side.toLowerCase()} ${order.symbol} order uses ${formattedMargin} margin at ${order.leverage}×, creating ${formattedExposure} of gross exposure. Based on the locally available order inputs, portfolio gross leverage moves from 0.75× to ${newGrossLeverage}× and the estimated composite score moves from 52 to ${calculatedScore} (${calculatedDelta >= 0 ? "+" : ""}${calculatedDelta} points). Connect the live risk service to include verified correlations, stress scenarios, and a Grok-generated explanation.`,
+      summaryDriver: "Position size and leverage",
+      whatChanged: `${formattedExposure} ${order.side.toLowerCase()} exposure at ${order.leverage}×`,
+      worstScenario: "Requires live risk analysis",
+      possibleOptions: "Smaller position, Lower leverage",
+      disclaimer:
+        "This rule-based fallback explains local order inputs. It does not calculate live market risk, predict markets, or provide investment advice.",
+    },
     alternatives: [
       {
         id: "original",
@@ -175,25 +199,36 @@ function getFallbackResult(rawOrder: ProposedOrder): RiskAnalysisResult {
  */
 export async function analyzePortfolioRisk(
   rawOrder: ProposedOrder,
+  portfolio?: Portfolio | null,
 ): Promise<RiskAnalysisResult> {
   const order = sanitizeOrder(rawOrder);
+  const equity = portfolio?.equity ?? 100_000;
+  const positions = portfolio?.holdings.length
+    ? portfolio.holdings.map((holding) => ({
+        symbol: holding.symbol,
+        side: holding.side.toLowerCase(),
+        margin: holding.margin,
+        leverage: holding.leverage,
+      }))
+    : [
+        { symbol: "AAPL", side: "long", margin: 15_000, leverage: 2 },
+        { symbol: "AMD", side: "long", margin: 12_500, leverage: 2 },
+        { symbol: "COIN", side: "long", margin: 10_000, leverage: 2 },
+      ];
   try {
     const response = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
       body: JSON.stringify({
-        equity: 100_000,
-        positions: [
-          { symbol: "AAPL", side: "long", margin: 15_000, leverage: 2 },
-          { symbol: "AMD", side: "long", margin: 12_500, leverage: 2 },
-          { symbol: "COIN", side: "long", margin: 10_000, leverage: 2 },
-        ],
+        equity,
+        positions,
         proposedOrder: {
           symbol: order.symbol,
           side: order.side.toLowerCase(),
           margin: order.margin,
           leverage: order.leverage,
+          note: order.note,
         },
       }),
     });

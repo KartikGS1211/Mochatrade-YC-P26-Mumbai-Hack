@@ -13,7 +13,7 @@ class Position(BaseModel):
         return self.margin * self.leverage
 
 class ProposedOrder(Position):
-    pass
+    note: Optional[str] = Field(default=None, max_length=500)
 
 class RiskAnalyzeRequest(BaseModel):
     equity: float = Field(default=100_000, gt=0, le=10_000_000)
@@ -57,15 +57,13 @@ class AlternativeOption(BaseModel):
     buttonLabel: Optional[str] = None
 
 class GroundedExplanation(BaseModel):
-    headline: str = ""
-    narrative: str = ""
-    summaryDriver: str = ""
-    whatChanged: str = ""
-    worstScenario: str = ""
-    possibleOptions: str = ""
-    disclaimer: str = ""
-
-from typing import Optional
+    headline: str
+    narrative: str
+    summaryDriver: str
+    whatChanged: str
+    worstScenario: str
+    possibleOptions: str
+    disclaimer: str
 
 class RiskAnalysisResult(BaseModel):
     model_config = ConfigDict(extra="allow")
@@ -89,6 +87,8 @@ class RiskAnalysisResult(BaseModel):
     scenarios: list[StressScenarioData]
     alternatives: list[AlternativeOption]
     explanation: GroundedExplanation
+    explanationSource: Literal["grok", "rule-based"] = "rule-based"
+    explanationModel: Optional[str] = None
     correlationMatrix: dict[str, list[float]] = {}
     dataInfo: Optional[dict] = None
 
