@@ -53,8 +53,8 @@ export function ScoreComposition({
               </tr>
             </thead>
             <tbody className="divide-y divide-ms-border/50 text-xs">
-              {components.map((item) => (
-                <tr key={item.component} className="hover:bg-ms-bg/60 transition-colors">
+              {components.map((item, idx) => (
+                <tr key={`${item.component}-${idx}`} className="hover:bg-ms-bg/60 transition-colors">
                   <td className="py-3 px-3">
                     <Tooltip>
                       <TooltipTrigger className="font-bold text-ms-navy cursor-help flex items-center gap-1.5 text-left">

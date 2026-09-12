@@ -24,6 +24,7 @@ export interface Portfolio {
   riskLabel: string;
   openPositions: number;
   dataWindow: string;
+  dataTimestamp?: string;
   holdings: Holding[];
 }
 

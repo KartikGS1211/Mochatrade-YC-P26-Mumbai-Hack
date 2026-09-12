@@ -247,7 +247,7 @@ export function HoldingsTable({
                     <div className="flex flex-wrap gap-1">
                       {h.riskTags.map((tag) => (
                         <span
-                          key={tag}
+                          key={`${h.symbol}-${tag}`}
                           className="bg-ms-bg text-ms-muted border border-ms-border text-[10px] px-1.5 py-0.5 rounded font-medium"
                         >
                           {tag}
@@ -299,7 +299,7 @@ export function HoldingsTable({
 
       {/* Edit Holding Dialog */}
       {editingHolding && (
-        <Dialog open={!!editingHolding} onOpenChange={(open) => !open && setEditingHolding(null)}>
+        <Dialog key={`edit-dialog-${editingHolding.symbol}`} open={!!editingHolding} onOpenChange={(open) => !open && setEditingHolding(null)}>
           <DialogContent className="bg-white max-w-sm">
             <DialogHeader>
               <DialogTitle className="text-ms-navy font-bold">

@@ -42,8 +42,8 @@ export function CorrelationHeatmap({ data }: CorrelationHeatmapProps) {
             <thead>
               <tr>
                 <th className="p-2 text-xs font-semibold text-ms-muted text-left">Asset</th>
-                {assets.map((asset) => (
-                  <th key={asset} className="p-2 text-xs font-bold text-ms-navy">
+                {assets.map((asset, idx) => (
+                  <th key={`col-${asset}-${idx}`} className="p-2 text-xs font-bold text-ms-navy">
                     {asset}
                   </th>
                 ))}
@@ -51,12 +51,12 @@ export function CorrelationHeatmap({ data }: CorrelationHeatmapProps) {
             </thead>
             <tbody>
               {assets.map((rowAsset, i) => (
-                <tr key={rowAsset}>
+                <tr key={`row-${rowAsset}-${i}`}>
                   <td className="p-2 text-xs font-bold text-ms-navy text-left">{rowAsset}</td>
                   {matrix[i].map((val, j) => {
                     const isHighPair = (rowAsset === "NVDA" && assets[j] === "AMD") || (rowAsset === "AMD" && assets[j] === "NVDA");
                     return (
-                      <td key={`${rowAsset}-${assets[j]}`} className="p-1">
+                      <td key={`cell-${rowAsset}-${assets[j]}-${i}-${j}`} className="p-1">
                         <div
                           className={`py-2 px-1 rounded-md text-xs font-tabular transition-transform hover:scale-105 ${getCellBg(
                             val

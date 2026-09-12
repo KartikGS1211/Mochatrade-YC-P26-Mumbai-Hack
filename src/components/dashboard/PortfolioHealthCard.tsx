@@ -9,7 +9,7 @@ interface PortfolioHealthCardProps {
 }
 
 export function PortfolioHealthCard({ portfolio }: PortfolioHealthCardProps) {
-  const { riskScore, riskLabel, grossExposure, grossLeverage, equity, openPositions, dataWindow } = portfolio;
+  const { riskScore, riskLabel, grossExposure, grossLeverage, equity, openPositions, dataWindow, dataTimestamp } = portfolio;
 
   // SVG Gauge parameters (r = 40, circumference ≈ 251.33)
   const radius = 40;
@@ -133,12 +133,20 @@ export function PortfolioHealthCard({ portfolio }: PortfolioHealthCardProps) {
             </span>
           </div>
 
-          <div className="flex items-center justify-between">
+           <div className="flex items-center justify-between">
             <span className="text-xs text-ms-muted font-medium">Data Window</span>
             <span className="text-xs font-semibold bg-ms-softblue text-ms-blue px-2 py-0.5 rounded">
               {dataWindow}
             </span>
           </div>
+          {dataTimestamp && (
+            <div className="flex items-center justify-between mt-1">
+              <span className="text-[11px] text-ms-muted font-medium">Data as of</span>
+              <span className="text-[11px] font-semibold bg-ms-softgreen text-ms-green px-2 py-0.5 rounded">
+                Calculated from verified market inputs
+              </span>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
