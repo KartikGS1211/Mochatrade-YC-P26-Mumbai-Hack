@@ -10,8 +10,10 @@ interface PortfolioHealthCardProps {
 }
 
 export function PortfolioHealthCard({ portfolio, analysisResult }: PortfolioHealthCardProps) {
-  const { riskScore, riskLabel, grossExposure, grossLeverage, equity, openPositions, dataWindow, dataTimestamp } = portfolio;
-  const postRiskScore = analysisResult?.proposedScore ?? riskScore;
+  const { grossExposure, grossLeverage, equity, openPositions, dataWindow, dataTimestamp } = portfolio;
+  const baseRiskScore = portfolio.riskScore ?? analysisResult?.currentScore ?? 52;
+  const baseRiskLabel = portfolio.riskLabel ?? (baseRiskScore >= 70 ? "High" : baseRiskScore >= 40 ? "Moderate" : "Low");
+  const postRiskScore = analysisResult?.proposedScore ?? baseRiskScore;
   const postGrossExposure = analysisResult ? analysisResult.portfolioLeverageAfter * equity : grossExposure;
   const postGrossLeverage = analysisResult?.portfolioLeverageAfter ?? grossLeverage;
 
@@ -42,7 +44,7 @@ export function PortfolioHealthCard({ portfolio, analysisResult }: PortfolioHeal
              variant="outline"
              className="bg-amber-50 text-ms-amber border-amber-200 font-semibold px-2.5 py-0.5 text-xs"
            >
-             ● {riskLabel}
+             ● {baseRiskLabel}
            </Badge>
          </CardHeader>
 
@@ -75,7 +77,7 @@ export function PortfolioHealthCard({ portfolio, analysisResult }: PortfolioHeal
              <div className="flex-1 space-y-4 text-center sm:text-left">
                <p className="text-xs sm:text-sm text-ms-muted leading-relaxed">
                  {analysisResult
-                   ? `After the proposed order, risk rises to ${postRiskScore}. Before: ${riskScore}.`
+                   ? `After the proposed order, risk rises to ${postRiskScore}. Before: ${baseRiskScore}.`
                    : "Before adding the proposed order, your portfolio carries a concentrated high-beta profile."}
                </p>
 

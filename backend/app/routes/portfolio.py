@@ -77,6 +77,8 @@ async def get_portfolio():
             "equity": DEFAULT_EQUITY,
             "grossExposure": gross_exposure,
             "grossLeverage": gross_leverage,
+            "riskScore": 52,
+            "riskLabel": "Moderate",
             "openPositions": open_positions,
             "dataWindow": "Live yfinance",
             "dataTimestamp": str(__import__("datetime").datetime.now().isoformat()),
