@@ -12,12 +12,15 @@ import type {
 } from "@/types/risk";
 import { DEFAULT_RISK_ANALYSIS } from "@/lib/mock-risk-data";
 
+const BACKEND_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") || "http://localhost:8000";
+
 const API_URL =
   process.env.NEXT_PUBLIC_RISK_API_URL ||
-  "http://localhost:8000/api/v1/risk/analyze";
+  `${BACKEND_BASE_URL}/api/v1/risk/analyze`;
 const PORTFOLIO_URL =
-  process.env.NEXT_PUBLIC_RISK_API_URL ||
-  "http://localhost:8000/api/v1/portfolio";
+  process.env.NEXT_PUBLIC_PORTFOLIO_API_URL ||
+  `${BACKEND_BASE_URL}/api/v1/portfolio`;
 const FALLBACK_LATENCY_MS = 800;
 
 /**
