@@ -76,15 +76,15 @@ function mapBackendToFrontend(raw: BackendRiskAnalysis): RiskAnalysisResult {
   };
 }
 
-function sanitizeOrder(order: any): ProposedOrder {
-  const margin = typeof order?.margin === "number" && !isNaN(order.margin) ? order.margin : 20_000;
-  const leverage = typeof order?.leverage === "number" && !isNaN(order.leverage) ? order.leverage : 3;
+function sanitizeOrder(order?: Partial<ProposedOrder> | null): ProposedOrder {
+  const margin = typeof order?.margin === "number" && !Number.isNaN(order.margin) ? order.margin : 20_000;
+  const leverage = typeof order?.leverage === "number" && !Number.isNaN(order.leverage) ? order.leverage : 3;
   return {
     symbol: order?.symbol || "NVDA",
     side: order?.side || "Long",
     margin,
     leverage,
-    exposure: typeof order?.exposure === "number" && !isNaN(order.exposure) ? order.exposure : margin * leverage,
+    exposure: typeof order?.exposure === "number" && !Number.isNaN(order.exposure) ? order.exposure : margin * leverage,
     note: order?.note || "",
   };
 }
